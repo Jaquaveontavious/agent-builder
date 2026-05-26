@@ -59,7 +59,7 @@ function CategorySection({ category }: { category: TemplateCategory }) {
           <h2 className={`text-lg font-bold ${category.accent}`}>{category.name}</h2>
           <p className="text-slate-500 text-xs">{category.tagline}</p>
         </div>
-        <span className="ml-auto text-xs text-slate-600">{templates.length} operatives</span>
+        <span className="ml-auto text-xs text-slate-600">{templates.length} agents</span>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -117,10 +117,10 @@ export default function TemplatesPage() {
         {/* Hero */}
         <div className="text-center max-w-2xl mx-auto">
           <h1 className="text-4xl font-bold mb-3">
-            Deploy a battle-tested operative
+            Start with a proven agent
           </h1>
           <p className="text-slate-400 text-lg">
-            {TEMPLATES.length} pre-forged operatives across {CATEGORIES.length} mission types. One click to configure — no API keys, no setup.
+            {TEMPLATES.length} pre-built agents across {CATEGORIES.length} categories. One click to configure — no API keys, no setup.
           </p>
         </div>
 
@@ -158,15 +158,15 @@ export default function TemplatesPage() {
         {/* Bottom CTA */}
         <div className="text-center border border-dashed border-slate-700 rounded-2xl py-14 px-6">
           <Crosshair className="w-10 h-10 text-slate-700 mx-auto mb-4" />
-          <h3 className="text-xl font-bold mb-2">Need a custom operative?</h3>
+          <h3 className="text-xl font-bold mb-2">Don't see what you need?</h3>
           <p className="text-slate-500 text-sm mb-6">
-            Describe any mission in plain English and Iron Operative will forge a custom agent for it in seconds.
+            Describe any task in plain English and Iron Operative will build a custom agent for it in seconds.
           </p>
           <Link
             href="/agents/new"
             className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-xl font-semibold text-sm transition-colors"
           >
-            <Zap className="w-4 h-4" /> Build custom operative
+            <Zap className="w-4 h-4" /> Build a custom agent
           </Link>
         </div>
       </main>

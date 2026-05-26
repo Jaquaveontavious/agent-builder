@@ -8,48 +8,48 @@ import { Shield, Zap, Cpu, Target, ChevronRight, Check, Crosshair } from 'lucide
 const FEATURES = [
   {
     icon: <Target className="w-6 h-6 text-red-400" />,
-    title: 'Brief It',
-    body: 'Describe your mission in plain English. No prompting skills. No setup. Just intent.',
+    title: 'Describe It',
+    body: 'Tell us what you need in plain English. No prompting skills, no setup, no technical knowledge required.',
   },
   {
     icon: <Cpu className="w-6 h-6 text-red-400" />,
     title: 'We Build It',
-    body: 'Iron Operative forges a precision-tuned AI operative with the exact tools for the job.',
+    body: 'Iron Operative configures a precision AI agent — fine-tuned system prompt, right tools, ready to work.',
   },
   {
     icon: <Zap className="w-6 h-6 text-red-400" />,
-    title: 'Deploy It',
-    body: 'Send your operative any mission. Watch it think, search, and execute in real time.',
+    title: 'Run It',
+    body: 'Give your agent a task. Watch it think, search, and execute in real time with full transparency.',
   },
   {
     icon: <Shield className="w-6 h-6 text-red-400" />,
-    title: 'Command It',
-    body: 'All operatives and mission logs are locked to your account. Your squad. Your control.',
+    title: 'Own It',
+    body: 'Every agent and its full run history is saved to your account. Your fleet. Your results. Always available.',
   },
 ]
 
 const PRICING = [
   {
-    name: 'Recruit',
+    name: 'Free',
     price: '$0',
     period: 'forever',
-    features: ['1 operative', '10 missions / month', 'Web search, HTTP, code tools', 'Mission history'],
-    cta: 'Enlist free',
+    features: ['1 agent', '10 runs / month', 'Web search, HTTP, code tools', 'Run history'],
+    cta: 'Get started free',
     href: '/auth/login',
     highlight: false,
   },
   {
-    name: 'Commander',
+    name: 'Pro',
     price: '$29',
     period: 'per month',
     features: [
-      'Unlimited operatives',
-      'Unlimited missions',
-      'All 5 intel tools',
+      'Unlimited agents',
+      'Unlimited runs',
+      'All 5 tools',
       'Priority execution',
-      'Full mission history',
+      'Full run history',
     ],
-    cta: 'Go Commander',
+    cta: 'Upgrade to Pro',
     href: '/auth/login?plan=pro',
     highlight: true,
   },
@@ -82,7 +82,7 @@ export default function LandingPage() {
             href="/auth/login"
             className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
           >
-            Enlist
+            Get started
           </Link>
         </div>
       </nav>
@@ -95,22 +95,22 @@ export default function LandingPage() {
         </div>
 
         <h1 className="text-5xl sm:text-6xl font-bold leading-tight mb-6">
-          Deploy your private{' '}
+          Your personal fleet of{' '}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-400">
-            AI militia
+            AI agents
           </span>
         </h1>
 
         <p className="text-slate-400 text-xl max-w-2xl mx-auto mb-12">
-          Describe the mission. Iron Operative recruits, configures, and arms a purpose-built AI operative
-          — ready to execute in under 60 seconds.
+          Describe what you need. Iron Operative builds, configures, and runs a purpose-built AI agent
+          — precise, fast, and fully under your control.
         </p>
 
         <form onSubmit={handleSubmit} className="max-w-2xl mx-auto">
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder={`e.g. "An operative that scouts competitor pricing across the web and delivers a tactical summary"`}
+            placeholder={`e.g. "An agent that monitors competitor pricing, summarizes changes, and sends me a daily report"`}
             rows={4}
             className="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-5 py-4 text-slate-100 placeholder-slate-500 text-base resize-none focus:outline-none focus:border-red-500 transition-colors"
           />
@@ -119,7 +119,7 @@ export default function LandingPage() {
             disabled={!description.trim()}
             className="mt-4 w-full sm:w-auto bg-red-600 hover:bg-red-500 disabled:opacity-40 disabled:cursor-not-allowed text-white px-8 py-4 rounded-xl text-base font-semibold transition-colors flex items-center justify-center gap-2 mx-auto"
           >
-            Recruit my operative
+            Build my agent
             <ChevronRight className="w-5 h-5" />
           </button>
         </form>
@@ -145,7 +145,7 @@ export default function LandingPage() {
       {/* Pricing */}
       <section className="max-w-4xl mx-auto px-6 py-20">
         <h2 className="text-3xl font-bold text-center mb-4">Simple pricing</h2>
-        <p className="text-slate-400 text-center mb-12">Enlist free. Go Commander when you need the full arsenal.</p>
+        <p className="text-slate-400 text-center mb-12">Start free. Upgrade when you need more.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {PRICING.map((plan) => (
             <div
@@ -158,7 +158,7 @@ export default function LandingPage() {
             >
               {plan.highlight && (
                 <span className="text-red-400 text-xs font-semibold uppercase tracking-widest mb-2">
-                  Full Arsenal
+                  Most Popular
                 </span>
               )}
               <div className="text-3xl font-bold mb-1">

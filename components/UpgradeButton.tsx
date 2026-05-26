@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Shield, Loader2 } from 'lucide-react'
 
-export default function UpgradeButton({ label = 'Go Commander', className }: { label?: string; className?: string }) {
+export default function UpgradeButton({ label = 'Upgrade to Pro', className }: { label?: string; className?: string }) {
   const [loading, setLoading] = useState(false)
 
   async function handleClick() {

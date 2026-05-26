@@ -74,7 +74,7 @@ export default async function DashboardPage({
           <div className="flex items-center gap-4">
             {isPro ? (
               <span className="flex items-center gap-1.5 bg-red-950 border border-red-700 text-red-300 text-xs px-3 py-1 rounded-full">
-                <Shield className="w-3 h-3" /> Commander
+                <Shield className="w-3 h-3" /> Pro
               </span>
             ) : (
               <UpgradeButton />
@@ -95,7 +95,7 @@ export default async function DashboardPage({
           <div className="bg-red-950/60 border border-red-700 rounded-xl px-6 py-4 mb-8 flex items-center gap-3">
             <Shield className="w-5 h-5 text-red-400" />
             <p className="text-red-200 font-medium">
-              Commander status achieved. Unlimited operatives and missions are now at your disposal.
+              You're now on Pro. Unlimited agents and runs are unlocked.
             </p>
           </div>
         )}
@@ -105,7 +105,7 @@ export default async function DashboardPage({
           <div className="bg-slate-900/60 border border-slate-800 rounded-xl px-6 py-4 mb-8 flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
             <div className="flex gap-8">
               <div>
-                <div className="text-xs text-slate-500 mb-1">Operatives</div>
+                <div className="text-xs text-slate-500 mb-1">Agents</div>
                 <div className="text-sm font-semibold">{agentCount} / {FREE_AGENT_LIMIT}</div>
                 <div className="w-24 h-1 bg-slate-700 rounded-full mt-1.5">
                   <div
@@ -115,7 +115,7 @@ export default async function DashboardPage({
                 </div>
               </div>
               <div>
-                <div className="text-xs text-slate-500 mb-1">Missions this month</div>
+                <div className="text-xs text-slate-500 mb-1">Runs this month</div>
                 <div className="text-sm font-semibold">{runsUsed} / {FREE_RUN_LIMIT}</div>
                 <div className="w-24 h-1 bg-slate-700 rounded-full mt-1.5">
                   <div
@@ -125,26 +125,26 @@ export default async function DashboardPage({
                 </div>
               </div>
             </div>
-            <UpgradeButton label="Go Commander — unlimited everything" className="text-xs text-red-400 hover:text-red-300 transition-colors flex items-center gap-1" />
+            <UpgradeButton label="Upgrade to Pro — unlimited everything" className="text-xs text-red-400 hover:text-red-300 transition-colors flex items-center gap-1" />
           </div>
         )}
 
         {/* Operatives header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold">Your Operatives</h1>
+            <h1 className="text-2xl font-bold">Your Agents</h1>
             <Link href="/agents/templates" className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-red-400 transition-colors">
-              <LayoutGrid className="w-3.5 h-3.5" /> Arsenal
+              <LayoutGrid className="w-3.5 h-3.5" /> Templates
             </Link>
           </div>
           {atAgentLimit ? (
-            <UpgradeButton label="Go Commander for more operatives" className="flex items-center gap-2 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" />
+            <UpgradeButton label="Upgrade to Pro for more agents" className="flex items-center gap-2 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" />
           ) : (
             <Link
               href="/agents/new"
               className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
             >
-              <Plus className="w-4 h-4" /> Recruit operative
+              <Plus className="w-4 h-4" /> New agent
             </Link>
           )}
         </div>
@@ -153,15 +153,15 @@ export default async function DashboardPage({
         {typedAgents.length === 0 && (
           <div className="text-center py-24 border border-dashed border-slate-800 rounded-2xl">
             <Crosshair className="w-12 h-12 text-slate-700 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-slate-400 mb-2">No operatives recruited</h3>
+            <h3 className="text-lg font-semibold text-slate-400 mb-2">No agents yet</h3>
             <p className="text-slate-600 mb-6 text-sm">
-              Your squad is empty. Brief us on the mission and we'll build your first operative.
+              Your fleet is empty. Describe what you need and we'll build your first agent.
             </p>
             <Link
               href="/agents/new"
               className="bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-2"
             >
-              <Plus className="w-4 h-4" /> Recruit your first operative
+              <Plus className="w-4 h-4" /> Build your first agent
             </Link>
           </div>
         )}
@@ -172,10 +172,10 @@ export default async function DashboardPage({
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                <h2 className="font-bold">Start from the Arsenal</h2>
+                <h2 className="font-bold">Start from a template</h2>
               </div>
               <Link href="/agents/templates" className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 transition-colors">
-                <LayoutGrid className="w-3.5 h-3.5" /> Full Arsenal {'>'}
+                <LayoutGrid className="w-3.5 h-3.5" /> All templates {'>'}
               </Link>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
