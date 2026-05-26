@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createAuthClient, createServiceClient } from '@/lib/supabase/server'
-import { Plus, Play, Shield, LogOut, LayoutGrid, Star, Crosshair } from 'lucide-react'
-import type { Agent, UserSubscription } from '@/lib/types'
+import { Plus, Shield, LogOut, LayoutGrid, Star, Crosshair, Network } from 'lucide-react'
+import type { Agent, Grid, UserSubscription } from '@/lib/types'
 import { FREE_AGENT_LIMIT, FREE_RUN_LIMIT, stripe } from '@/lib/stripe'
 import { CATEGORIES, getPopularTemplates } from '@/lib/templates'
 import UpgradeButton from '@/components/UpgradeButton'
@@ -21,12 +21,14 @@ export default async function DashboardPage({
 
   const service = createServiceClient()
 
-  const [{ data: agents }, { data: sub }] = await Promise.all([
+  const [{ data: agents }, { data: sub }, { data: grids }] = await Promise.all([
     service.from('agents').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
     service.from('user_subscriptions').select('*').eq('user_id', user.id).single(),
+    service.from('grids').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(4),
   ])
 
   const typedAgents = (agents ?? []) as Agent[]
+  const typedGrids = (grids ?? []) as Grid[]
   let subscription = sub as UserSubscription | null
 
   // When the user lands here after a successful checkout, the webhook may not
@@ -72,6 +74,15 @@ export default async function DashboardPage({
           </Link>
 
           <div className="flex items-center gap-4">
+            {isPro && (
+              <Link
+                href="/grid"
+                className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-red-400 transition-colors"
+              >
+                <Network className="w-4 h-4" />
+                The Grid
+              </Link>
+            )}
             {isPro ? (
               <span className="flex items-center gap-1.5 bg-red-950 border border-red-700 text-red-300 text-xs px-3 py-1 rounded-full">
                 <Shield className="w-3 h-3" /> Pro
@@ -204,6 +215,81 @@ export default async function DashboardPage({
           {typedAgents.map((agent) => (
             <AgentCard key={agent.id} agent={agent} />
           ))}
+        </div>
+
+        {/* The Grid section */}
+        <div className="mt-12">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <Network className="w-5 h-5 text-red-400" />
+              <h2 className="text-xl font-bold">The Grid</h2>
+              {isPro && (
+                <span className="text-xs text-slate-600 bg-slate-800 px-2 py-0.5 rounded-full">
+                  Multi-agent orchestration
+                </span>
+              )}
+            </div>
+            {isPro && (
+              <div className="flex items-center gap-3">
+                <Link href="/grid" className="text-xs text-slate-500 hover:text-red-400 transition-colors">
+                  View all →
+                </Link>
+                <Link
+                  href="/grid/new"
+                  className="flex items-center gap-1.5 bg-red-600 hover:bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" /> New Grid
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {!isPro && (
+            <div className="bg-slate-900/40 border border-slate-800/60 rounded-xl px-6 py-8 flex items-center gap-6">
+              <Network className="w-10 h-10 text-slate-700 flex-shrink-0" />
+              <div>
+                <p className="font-semibold text-slate-300 mb-1">Orchestrate multiple agents on a single task</p>
+                <p className="text-sm text-slate-500">
+                  The Grid lets agents recruit sub-agents, work in parallel, and pass results between each other — unlocked with Pro.
+                </p>
+              </div>
+              <UpgradeButton label="Unlock The Grid" className="flex-shrink-0 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" />
+            </div>
+          )}
+
+          {isPro && typedGrids.length === 0 && (
+            <div className="border border-dashed border-slate-800 rounded-xl py-10 text-center">
+              <p className="text-slate-500 text-sm mb-3">No grids yet.</p>
+              <Link
+                href="/grid/new"
+                className="text-red-400 hover:text-red-300 text-sm transition-colors"
+              >
+                Build your first Grid →
+              </Link>
+            </div>
+          )}
+
+          {isPro && typedGrids.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {typedGrids.map((grid) => (
+                <Link
+                  key={grid.id}
+                  href={`/grid/${grid.id}`}
+                  className="group flex items-center gap-3 bg-slate-900/60 border border-slate-800 hover:border-red-800/60 rounded-xl p-4 transition-all"
+                >
+                  <Network className="w-4 h-4 text-red-400 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold group-hover:text-red-300 transition-colors truncate">
+                      {grid.name}
+                    </div>
+                    <div className="text-xs text-slate-500">
+                      {grid.member_agents.length} agents
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </main>
     </div>

@@ -53,3 +53,51 @@ export type SSEEvent =
   | { type: 'tool_result'; name: string; content: string }
   | { type: 'done'; tokens_used: number; run_id: string }
   | { type: 'error'; message: string }
+
+// ─── The Grid ───────────────────────────────────────────────────────────────
+
+export interface GridMember {
+  id: string
+  name: string
+  role: string
+}
+
+export interface Grid {
+  id: string
+  user_id: string
+  name: string
+  description: string | null
+  member_agents: GridMember[]
+  created_at: string
+}
+
+export interface AgentLog {
+  agent_id: string
+  agent_name: string
+  task: string
+  output: string
+  tokens: number
+  started_at: string
+  completed_at: string
+}
+
+export interface GridRun {
+  id: string
+  grid_id: string
+  user_id: string
+  input: string
+  output: string | null
+  status: 'running' | 'complete' | 'failed'
+  agent_logs: AgentLog[]
+  tokens_used: number
+  created_at: string
+}
+
+export type GridSSEEvent =
+  | { type: 'coordinator_text'; content: string }
+  | { type: 'agent_start'; agent_id: string; agent_name: string; task: string }
+  | { type: 'agent_text'; agent_id: string; content: string }
+  | { type: 'agent_tool_call'; agent_id: string; tool: string }
+  | { type: 'agent_complete'; agent_id: string; output: string; tokens: number }
+  | { type: 'done'; tokens_used: number; run_id: string }
+  | { type: 'error'; message: string }
