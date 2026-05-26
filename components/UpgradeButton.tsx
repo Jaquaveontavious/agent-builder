@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Crown, Loader2 } from 'lucide-react'
+import { Shield, Loader2 } from 'lucide-react'
 
-export default function UpgradeButton({ label = 'Upgrade to Pro', className }: { label?: string; className?: string }) {
+export default function UpgradeButton({ label = 'Go Commander', className }: { label?: string; className?: string }) {
   const [loading, setLoading] = useState(false)
 
   async function handleClick() {
@@ -27,9 +27,9 @@ export default function UpgradeButton({ label = 'Upgrade to Pro', className }: {
     <button
       onClick={handleClick}
       disabled={loading}
-      className={className ?? 'flex items-center gap-1.5 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-xs px-3 py-1.5 rounded-full transition-colors font-medium'}
+      className={className ?? 'flex items-center gap-1.5 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white text-xs px-3 py-1.5 rounded-full transition-colors font-medium'}
     >
-      {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Crown className="w-3 h-3" />}
+      {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Shield className="w-3 h-3" />}
       {loading ? 'Redirecting…' : label}
     </button>
   )

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Bot, ArrowLeft, Star, Zap } from 'lucide-react'
+import { Crosshair, ArrowLeft, Star, Zap } from 'lucide-react'
 import { CATEGORIES, TEMPLATES, type AgentTemplate, type TemplateCategory } from '@/lib/templates'
 
 const TOOL_LABELS: Record<string, string> = {
@@ -59,7 +59,7 @@ function CategorySection({ category }: { category: TemplateCategory }) {
           <h2 className={`text-lg font-bold ${category.accent}`}>{category.name}</h2>
           <p className="text-slate-500 text-xs">{category.tagline}</p>
         </div>
-        <span className="ml-auto text-xs text-slate-600">{templates.length} agents</span>
+        <span className="ml-auto text-xs text-slate-600">{templates.length} operatives</span>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -81,15 +81,15 @@ export default function TemplatesPage() {
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <Link href="/dashboard" className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors">
             <ArrowLeft className="w-4 h-4" />
-            Dashboard
+            Command Center
           </Link>
           <div className="flex items-center gap-2">
-            <Bot className="w-5 h-5 text-violet-400" />
-            <span className="font-bold">Agent Templates</span>
+            <Crosshair className="w-5 h-5 text-red-400" />
+            <span className="font-bold">Operative Arsenal</span>
           </div>
           <Link
             href="/agents/new"
-            className="flex items-center gap-1.5 text-xs text-violet-400 hover:text-violet-300 transition-colors"
+            className="flex items-center gap-1.5 text-xs text-red-400 hover:text-violet-300 transition-colors"
           >
             <Zap className="w-3.5 h-3.5" /> Build from scratch
           </Link>
@@ -117,10 +117,10 @@ export default function TemplatesPage() {
         {/* Hero */}
         <div className="text-center max-w-2xl mx-auto">
           <h1 className="text-4xl font-bold mb-3">
-            Start with a proven agent
+            Deploy a battle-tested operative
           </h1>
           <p className="text-slate-400 text-lg">
-            {TEMPLATES.length} ready-to-deploy agents across {CATEGORIES.length} categories. One click to configure — no API keys, no setup.
+            {TEMPLATES.length} pre-forged operatives across {CATEGORIES.length} mission types. One click to configure — no API keys, no setup.
           </p>
         </div>
 
@@ -157,16 +157,16 @@ export default function TemplatesPage() {
 
         {/* Bottom CTA */}
         <div className="text-center border border-dashed border-slate-700 rounded-2xl py-14 px-6">
-          <Bot className="w-10 h-10 text-slate-700 mx-auto mb-4" />
-          <h3 className="text-xl font-bold mb-2">Don't see what you need?</h3>
+          <Crosshair className="w-10 h-10 text-slate-700 mx-auto mb-4" />
+          <h3 className="text-xl font-bold mb-2">Need a custom operative?</h3>
           <p className="text-slate-500 text-sm mb-6">
-            Describe any task in plain English and AgentForge will build a custom agent for it in seconds.
+            Describe any mission in plain English and Iron Operative will forge a custom agent for it in seconds.
           </p>
           <Link
             href="/agents/new"
-            className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-6 py-3 rounded-xl font-semibold text-sm transition-colors"
+            className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-xl font-semibold text-sm transition-colors"
           >
-            <Zap className="w-4 h-4" /> Build a custom agent
+            <Zap className="w-4 h-4" /> Build custom operative
           </Link>
         </div>
       </main>

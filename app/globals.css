@@ -50,5 +50,13 @@ body {
 .cursor::after {
   content: '▋';
   animation: blink 1s infinite;
-  color: #8b5cf6;
+  color: #ef4444;
+}
+
+/* Metal grid background pattern */
+.metal-grid {
+  background-image:
+    linear-gradient(rgba(239,68,68,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(239,68,68,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
 }
