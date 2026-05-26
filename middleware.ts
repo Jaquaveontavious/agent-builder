@@ -2,7 +2,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const PROTECTED = ['/dashboard', '/agents']
+const PROTECTED = ['/dashboard', '/agents', '/grid']
 const AUTH_ONLY = ['/auth/login']
 
 export async function middleware(req: NextRequest) {
@@ -46,5 +46,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/agents/:path*', '/auth/login'],
+  matcher: ['/dashboard/:path*', '/agents/:path*', '/grid/:path*', '/grid', '/auth/login'],
 }
