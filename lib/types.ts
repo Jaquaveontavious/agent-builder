@@ -93,6 +93,55 @@ export interface GridRun {
   created_at: string
 }
 
+// ─── Workspaces ─────────────────────────────────────────────────────────────
+
+export type PanelType = 'stat' | 'list' | 'table' | 'text' | 'query'
+export type PanelSize = 'small' | 'medium' | 'large'
+
+export interface Workspace {
+  id: string
+  user_id: string
+  name: string
+  description: string | null
+  created_at: string
+}
+
+export interface Panel {
+  id: string
+  workspace_id: string
+  user_id: string
+  agent_id: string | null
+  title: string
+  panel_type: PanelType
+  size: PanelSize
+  position: number
+  auto_prompt: string | null
+  last_output: PanelOutput | null
+  last_run_at: string | null
+  created_at: string
+}
+
+export interface StatData   { value: string; label: string; trend?: string; context?: string }
+export interface ListData   { items: string[]; title?: string }
+export interface TableData  { headers: string[]; rows: string[][] }
+export interface TextData   { content: string }
+
+export type PanelOutput =
+  | ({ type: 'stat'            } & StatData)
+  | ({ type: 'list'            } & ListData)
+  | ({ type: 'table'           } & TableData)
+  | ({ type: 'text' | 'query'  } & TextData)
+  | { type: 'error'; message: string }
+
+export interface PanelConfig {
+  title: string
+  agent_id: string
+  panel_type: PanelType
+  size: PanelSize
+  position: number
+  auto_prompt?: string
+}
+
 export type GridSSEEvent =
   | { type: 'coordinator_text'; content: string }
   | { type: 'agent_start'; agent_id: string; agent_name: string; task: string }

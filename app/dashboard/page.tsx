@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createAuthClient, createServiceClient } from '@/lib/supabase/server'
-import { Plus, Shield, LogOut, LayoutGrid, Star, Crosshair, Network } from 'lucide-react'
-import type { Agent, Grid, UserSubscription } from '@/lib/types'
+import { Plus, Shield, LogOut, LayoutGrid, Star, Crosshair, Network, LayoutDashboard } from 'lucide-react'
+import type { Agent, Grid, UserSubscription, Workspace } from '@/lib/types'
 import { FREE_AGENT_LIMIT, FREE_RUN_LIMIT, stripe } from '@/lib/stripe'
 import { CATEGORIES, getPopularTemplates } from '@/lib/templates'
 import UpgradeButton from '@/components/UpgradeButton'
@@ -21,14 +21,16 @@ export default async function DashboardPage({
 
   const service = createServiceClient()
 
-  const [{ data: agents }, { data: sub }, { data: grids }] = await Promise.all([
+  const [{ data: agents }, { data: sub }, { data: grids }, { data: workspaces }] = await Promise.all([
     service.from('agents').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
     service.from('user_subscriptions').select('*').eq('user_id', user.id).single(),
     service.from('grids').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(4),
+    service.from('workspaces').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(3),
   ])
 
   const typedAgents = (agents ?? []) as Agent[]
   const typedGrids = (grids ?? []) as Grid[]
+  const typedWorkspaces = (workspaces ?? []) as Workspace[]
   let subscription = sub as UserSubscription | null
 
   // When the user lands here after a successful checkout, the webhook may not
@@ -74,13 +76,12 @@ export default async function DashboardPage({
           </Link>
 
           <div className="flex items-center gap-4">
+            <Link href="/workspace" className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-red-400 transition-colors">
+              <LayoutDashboard className="w-4 h-4" /> Workspaces
+            </Link>
             {isPro && (
-              <Link
-                href="/grid"
-                className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-red-400 transition-colors"
-              >
-                <Network className="w-4 h-4" />
-                The Grid
+              <Link href="/grid" className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-red-400 transition-colors">
+                <Network className="w-4 h-4" /> The Grid
               </Link>
             )}
             {isPro ? (
@@ -215,6 +216,47 @@ export default async function DashboardPage({
           {typedAgents.map((agent) => (
             <AgentCard key={agent.id} agent={agent} />
           ))}
+        </div>
+
+        {/* Workspaces section */}
+        <div className="mt-12">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <LayoutDashboard className="w-5 h-5 text-red-400" />
+              <h2 className="text-xl font-bold">Workspaces</h2>
+              <span className="text-xs text-slate-600 bg-slate-800 px-2 py-0.5 rounded-full">AI-powered dashboards</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Link href="/workspace" className="text-xs text-slate-500 hover:text-red-400 transition-colors">View all →</Link>
+              <Link href="/workspace/new" className="flex items-center gap-1.5 bg-red-600 hover:bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors">
+                <Plus className="w-3.5 h-3.5" /> New Workspace
+              </Link>
+            </div>
+          </div>
+
+          {typedWorkspaces.length === 0 && (
+            <div className="border border-dashed border-slate-800 rounded-xl py-8 text-center">
+              <p className="text-slate-500 text-sm mb-3">Build a custom dashboard from your agents.</p>
+              <Link href="/workspace/new" className="text-red-400 hover:text-red-300 text-sm transition-colors">
+                Create your first workspace →
+              </Link>
+            </div>
+          )}
+
+          {typedWorkspaces.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {typedWorkspaces.map((ws) => (
+                <Link key={ws.id} href={`/workspace/${ws.id}`}
+                  className="group flex items-center gap-3 bg-slate-900/60 border border-slate-800 hover:border-red-800/60 rounded-xl p-4 transition-all">
+                  <LayoutDashboard className="w-4 h-4 text-red-400 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold group-hover:text-red-300 transition-colors truncate">{ws.name}</div>
+                    {ws.description && <div className="text-xs text-slate-500 truncate">{ws.description}</div>}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* The Grid section */}
