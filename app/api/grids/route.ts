@@ -55,7 +55,10 @@ export async function POST(req: Request) {
     .select()
     .single()
 
-  if (error || !grid) return new Response('Failed to create grid.', { status: 500 })
+  if (error || !grid) {
+    console.error('Grid insert error:', error)
+    return new Response(error?.message ?? 'Failed to create grid.', { status: 500 })
+  }
 
   return Response.json({ grid: grid as Grid })
 }
