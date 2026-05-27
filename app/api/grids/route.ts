@@ -56,8 +56,11 @@ export async function POST(req: Request) {
     .single()
 
   if (error || !grid) {
-    console.error('Grid insert error:', error)
-    return new Response(error?.message ?? 'Failed to create grid.', { status: 500 })
+    console.error('Grid insert error:', JSON.stringify(error))
+    return new Response(
+      error ? `${error.code}: ${error.message} — ${error.details ?? ''}` : 'Insert returned no data.',
+      { status: 500 }
+    )
   }
 
   return Response.json({ grid: grid as Grid })
