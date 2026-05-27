@@ -23,16 +23,6 @@ export async function POST(req: Request) {
 
   const service = createServiceClient()
 
-  const { data: sub } = await service
-    .from('user_subscriptions')
-    .select('plan')
-    .eq('user_id', user.id)
-    .single()
-
-  if (sub?.plan !== 'pro') {
-    return new Response('The Grid requires a Pro subscription.', { status: 403 })
-  }
-
   const body = await req.json() as {
     name?: string
     description?: string
