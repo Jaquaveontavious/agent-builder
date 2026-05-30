@@ -195,9 +195,29 @@ async function runHttpRequest(
       return 'Error: Requests to local/internal addresses are not allowed.'
     }
 
+    // Auto-inject API keys — agent never needs to handle auth
+    const isRapidApi = parsed.hostname.endsWith('rapidapi.com')
+    const isRentcast = parsed.hostname === 'api.rentcast.io'
+
+    const injectedHeaders: Record<string, string> = isRapidApi
+      ? { 'x-rapidapi-key': process.env.RAPIDAPI_KEY ?? '', 'x-rapidapi-host': parsed.hostname }
+      : isRentcast
+      ? { 'X-Api-Key': process.env.RENTCAST_API_KEY ?? '' }
+      : {}
+
+    // Strip any auth headers the agent may have hallucinated
+    const safeHeaders = { ...(headers ?? {}) }
+    if (isRapidApi || isRentcast) {
+      delete safeHeaders['Authorization']
+      delete safeHeaders['authorization']
+      delete safeHeaders['X-Api-Key']
+      delete safeHeaders['x-api-key']
+      delete safeHeaders['x-rapidapi-key']
+    }
+
     const res = await fetch(url, {
       method,
-      headers: { 'User-Agent': 'AgentForge/1.0', ...headers },
+      headers: { 'User-Agent': 'PropIQ/1.0', 'Accept': 'application/json', ...safeHeaders, ...injectedHeaders },
       body: body ?? undefined,
     })
 

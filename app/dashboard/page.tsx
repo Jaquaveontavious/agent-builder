@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createAuthClient, createServiceClient } from '@/lib/supabase/server'
-import { Plus, Shield, LogOut, LayoutGrid, Star, Crosshair, Network, LayoutDashboard } from 'lucide-react'
+import { Plus, Shield, LogOut, LayoutGrid, Star, Crosshair, Network, LayoutDashboard, Building2 } from 'lucide-react'
 import type { Agent, Grid, UserSubscription, Workspace } from '@/lib/types'
 import { FREE_AGENT_LIMIT, FREE_RUN_LIMIT, stripe } from '@/lib/stripe'
 import { CATEGORIES, getPopularTemplates } from '@/lib/templates'
@@ -79,6 +79,11 @@ export default async function DashboardPage({
             <Link href="/workspace" className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-red-400 transition-colors">
               <LayoutDashboard className="w-4 h-4" /> Workspaces
             </Link>
+            {isPro && (
+              <Link href="/chat" className="flex items-center gap-1.5 text-sm text-amber-400 hover:text-amber-300 transition-colors font-medium">
+                <Building2 className="w-4 h-4" /> PropIQ
+              </Link>
+            )}
             {isPro && (
               <Link href="/grid" className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-red-400 transition-colors">
                 <Network className="w-4 h-4" /> The Grid
