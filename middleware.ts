@@ -2,7 +2,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const PROTECTED = ['/dashboard', '/agents', '/grid', '/workspace', '/chat']
+const PROTECTED = ['/dashboard', '/agents', '/grid', '/workspace', '/chat', '/hub', '/underwriter', '/market-pulse', '/offer-writer', '/lead-nurture', '/skip-tracer']
 const AUTH_ONLY = ['/auth/login']
 
 export async function middleware(req: NextRequest) {
@@ -39,12 +39,12 @@ export async function middleware(req: NextRequest) {
   }
 
   if (user && isAuthOnly) {
-    return NextResponse.redirect(new URL('/dashboard', req.url))
+    return NextResponse.redirect(new URL('/hub', req.url))
   }
 
   return res
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/agents/:path*', '/grid/:path*', '/grid', '/workspace/:path*', '/workspace', '/chat/:path*', '/chat', '/auth/login'],
+  matcher: ['/dashboard/:path*', '/agents/:path*', '/grid/:path*', '/grid', '/workspace/:path*', '/workspace', '/chat/:path*', '/chat', '/hub/:path*', '/hub', '/underwriter/:path*', '/underwriter', '/market-pulse/:path*', '/market-pulse', '/offer-writer/:path*', '/offer-writer', '/lead-nurture/:path*', '/lead-nurture', '/skip-tracer/:path*', '/skip-tracer', '/auth/login'],
 }

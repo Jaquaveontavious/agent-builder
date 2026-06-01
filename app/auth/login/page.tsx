@@ -3,7 +3,7 @@
 import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Bot, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react'
+import { Building2, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react'
 import { createBrowserClientHelper } from '@/lib/supabase/client'
 
 type Mode = 'login' | 'signup' | 'magic'
@@ -11,7 +11,7 @@ type Mode = 'login' | 'signup' | 'magic'
 function LoginForm() {
   const router = useRouter()
   const params = useSearchParams()
-  const next = params.get('next') ?? '/dashboard'
+  const next = params.get('next') ?? '/hub'
   const desc = params.get('desc') ?? ''
 
   const [mode, setMode] = useState<Mode>('login')
@@ -84,8 +84,10 @@ function LoginForm() {
   return (
     <div className="w-full max-w-sm">
       <Link href="/" className="flex items-center gap-2 justify-center mb-8">
-        <Bot className="w-8 h-8 text-violet-400" />
-        <span className="text-2xl font-bold">AgentForge</span>
+        <div className="w-9 h-9 bg-amber-500 rounded-lg flex items-center justify-center">
+          <Building2 className="w-5 h-5 text-black" />
+        </div>
+        <span className="text-2xl font-bold">PropIQ</span>
       </Link>
 
       <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-8">
@@ -135,7 +137,7 @@ function LoginForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white py-2.5 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-black py-2.5 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2"
           >
             {loading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -152,7 +154,7 @@ function LoginForm() {
           {mode !== 'magic' && (
             <button
               onClick={() => setMode('magic')}
-              className="text-slate-400 hover:text-violet-400 transition-colors block w-full"
+              className="text-slate-400 hover:text-amber-400 transition-colors block w-full"
             >
               Sign in with magic link instead
             </button>
@@ -160,7 +162,7 @@ function LoginForm() {
           {mode === 'magic' && (
             <button
               onClick={() => setMode('login')}
-              className="text-slate-400 hover:text-violet-400 transition-colors block w-full"
+              className="text-slate-400 hover:text-amber-400 transition-colors block w-full"
             >
               Use password instead
             </button>
@@ -169,14 +171,14 @@ function LoginForm() {
             {mode === 'signup' ? (
               <>
                 Already have an account?{' '}
-                <button onClick={() => setMode('login')} className="text-violet-400 hover:text-violet-300">
+                <button onClick={() => setMode('login')} className="text-amber-400 hover:text-amber-300">
                   Sign in
                 </button>
               </>
             ) : (
               <>
                 No account?{' '}
-                <button onClick={() => setMode('signup')} className="text-violet-400 hover:text-violet-300">
+                <button onClick={() => setMode('signup')} className="text-amber-400 hover:text-amber-300">
                   Sign up free
                 </button>
               </>
