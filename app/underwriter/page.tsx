@@ -1,3 +1,4 @@
+'use client'
 import AgentPage from '@/components/AgentPage'
 import { Calculator } from 'lucide-react'
 

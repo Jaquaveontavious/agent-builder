@@ -1,3 +1,4 @@
+'use client'
 import AgentPage from '@/components/AgentPage'
 import { TrendingUp } from 'lucide-react'
 

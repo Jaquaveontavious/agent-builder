@@ -13,7 +13,10 @@ import {
   ChevronDown,
   ChevronUp,
   Sparkles,
+  FileText,
 } from 'lucide-react'
+import DealDossier from '@/components/DealDossier'
+import type { PropertyInput } from '@/app/api/propiq/dossier/route'
 
 interface Message {
   id: string
@@ -36,7 +39,26 @@ const EXAMPLES = [
   'Find flips in Atlanta GA under $300k, 3 bed minimum',
 ]
 
-function PropertyCard({ content }: { content: string }) {
+function parsePropertyInput(address: string, fields: Record<string, string>): PropertyInput {
+  return {
+    address,
+    price: fields['Price'] ?? '',
+    beds: fields['Beds/Baths/Sqft']?.split('/')[0]?.trim() ?? '',
+    baths: fields['Beds/Baths/Sqft']?.split('/')[1]?.trim() ?? '',
+    sqft: fields['Beds/Baths/Sqft']?.split('/')[2]?.trim() ?? '',
+    daysOnMarket: fields['Days on Market'] ?? '',
+    arv: fields['Est. ARV'] ?? '',
+    arvRange: fields['ARV Range'] ?? '',
+    upside: fields['Upside'] ?? '',
+    owner: fields['Owner']?.split('|')[0]?.trim() ?? '',
+    ownerType: fields['Owner']?.split('|')[1]?.trim() ?? '',
+    lastSold: fields['Last Sold'] ?? '',
+    mailTo: fields['Mail To'] ?? '',
+    whyItStandsOut: fields['Why it stands out'] ?? '',
+  }
+}
+
+function PropertyCard({ content, onAnalyze }: { content: string; onAnalyze: (p: PropertyInput) => void }) {
   const blocks = content.split(/^---$/m).map((b) => b.trim()).filter(Boolean)
 
   const propertyBlocks = blocks.filter((b) => b.startsWith('**') || b.includes('Price:'))
@@ -131,6 +153,15 @@ function PropertyCard({ content }: { content: string }) {
                 )}
               </div>
             )}
+
+            {/* Full Analysis button */}
+            <button
+              onClick={() => onAnalyze(parsePropertyInput(address, fields))}
+              className="mt-4 w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold py-2 rounded-lg transition-colors"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              Full Analysis — Underwrite · Offer Letter · Lead Nurture
+            </button>
           </div>
         )
       })}
@@ -196,6 +227,7 @@ export default function ChatPage() {
   const [streamingContent, setStreamingContent] = useState('')
   const [agentActivity, setAgentActivity] = useState<AgentActivity[]>([])
   const [error, setError] = useState('')
+  const [dossierProperty, setDossierProperty] = useState<PropertyInput | null>(null)
 
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -397,7 +429,7 @@ export default function ChatPage() {
               </div>
             ) : (
               <div className="max-w-[95%] space-y-1">
-                <PropertyCard content={msg.content} />
+                <PropertyCard content={msg.content} onAnalyze={setDossierProperty} />
                 {msg.agentActivity && msg.agentActivity.length > 0 && (
                   <AgentActivityLog activities={msg.agentActivity} />
                 )}
@@ -428,7 +460,7 @@ export default function ChatPage() {
               )}
 
               {streamingContent ? (
-                <PropertyCard content={streamingContent} />
+                <PropertyCard content={streamingContent} onAnalyze={setDossierProperty} />
               ) : (
                 <div className="flex items-center gap-2 text-slate-500 text-sm">
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -477,6 +509,12 @@ export default function ChatPage() {
           </div>
         </div>
       </div>
+
+      {/* Deal Dossier drawer */}
+      <DealDossier
+        property={dossierProperty}
+        onClose={() => setDossierProperty(null)}
+      />
     </div>
   )
 }
