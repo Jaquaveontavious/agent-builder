@@ -40,9 +40,19 @@ const EXAMPLES = [
 ]
 
 function parsePropertyInput(address: string, fields: Record<string, string>): PropertyInput {
+  // Price may appear under several keys depending on coordinator formatting
+  const price =
+    fields['Price'] ??
+    fields['List Price'] ??
+    fields['Asking Price'] ??
+    fields['Price (ask)'] ??
+    // Extract first dollar amount found in any price-like field
+    Object.entries(fields).find(([k]) => k.toLowerCase().includes('price'))?.[1] ??
+    ''
+
   return {
     address,
-    price: fields['Price'] ?? '',
+    price,
     beds: fields['Beds/Baths/Sqft']?.split('/')[0]?.trim() ?? '',
     baths: fields['Beds/Baths/Sqft']?.split('/')[1]?.trim() ?? '',
     sqft: fields['Beds/Baths/Sqft']?.split('/')[2]?.trim() ?? '',

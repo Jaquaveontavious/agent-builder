@@ -79,6 +79,10 @@ Then produce this report — no extra commentary, just the report:
 [2 sentences: flip or hold, and the single strongest reason based on the numbers]`
 }
 
+function todayFormatted(): string {
+  return new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+}
+
 function buildOfferPrompt(p: PropertyInput): string {
   return `You are a direct mail letter writer for real estate investors.
 
@@ -102,7 +106,7 @@ Rules:
 - Output the letter only — no commentary before or after
 
 ---
-[Today's Date]
+${todayFormatted()}
 
 ${p.owner}
 ${p.mailTo}
