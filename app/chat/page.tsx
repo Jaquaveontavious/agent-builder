@@ -98,10 +98,13 @@ function PropertyCard({ content, onAnalyze }: { content: string; onAnalyze: (p: 
       setSkipResults((prev) => ({ ...prev, [i]: 'none' }))
     }
   }
-  const blocks = content.split(/^---$/m).map((b) => b.trim()).filter(Boolean)
+  // Split on --- separators (with or without surrounding newlines/spaces)
+  const blocks = content.split(/\n\s*---\s*\n/).map((b) => b.trim()).filter(Boolean)
 
-  const propertyBlocks = blocks.filter((b) => b.startsWith('**') || b.includes('Price:'))
-  const summaryMatch = content.match(/## Summary\n([\s\S]+)$/)
+  const propertyBlocks = blocks.filter((b) =>
+    b.startsWith('**') || b.includes('Price:') || b.includes('- Price:') || /^\*\*[^*]+\*\*/.test(b)
+  )
+  const summaryMatch = content.match(/##\s*Top Pick\n([\s\S]+)$/) ?? content.match(/## Summary\n([\s\S]+)$/)
 
   if (propertyBlocks.length === 0) {
     return (

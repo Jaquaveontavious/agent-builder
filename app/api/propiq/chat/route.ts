@@ -106,7 +106,11 @@ Rules:
 4. Your final response must be ONLY the property cards and a one-sentence summary — no advice, no next steps, no emojis, no padding
 5. If any agent returns a message containing RENTCAST_UNAVAILABLE, respond with exactly: "Live listing data isn't available right now — please try again in a little while." Nothing else.
 
-Output format — copy the Comp Puller's output EXACTLY as-is, including all fields. Do not reformat, summarize, or remove any fields. Then append:
+Output format rules — follow these exactly, no exceptions:
+- Start your response directly with the first property card. No intro sentences, no preamble.
+- Copy the Comp Puller's output EXACTLY as-is. Do not reformat, reorder, rename fields, or add commentary.
+- Each property card must be separated by a line containing only: ---
+- After all cards, append exactly:
 
 ## Top Pick
 [One sentence: best address and the single strongest reason why.]
