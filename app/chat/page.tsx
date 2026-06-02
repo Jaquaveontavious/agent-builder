@@ -201,7 +201,18 @@ function PropertyCard({ content, onAnalyze }: { content: string; onAnalyze: (p: 
               </div>
             )}
             {skipResults[i] === 'none' && (
-              <div className="mt-3 text-xs text-slate-600">No contact records found for this owner.</div>
+              <div className="mt-3 pt-3 border-t border-slate-800 space-y-2">
+                <p className="text-xs text-slate-500">No records in public database.</p>
+                <a
+                  href={`https://batchskiptracing.com`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-xs text-violet-400 hover:text-violet-300 transition-colors"
+                >
+                  <Search className="w-3 h-3" />
+                  Try BatchSkipTracing — $0.12/record, used by real wholesalers
+                </a>
+              </div>
             )}
             {Array.isArray(skipResults[i]) && (
               <div className="mt-3 pt-3 border-t border-slate-800 space-y-2">

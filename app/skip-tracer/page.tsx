@@ -128,9 +128,19 @@ export default function SkipTracerPage() {
 
         {/* No results */}
         {results !== null && results.length === 0 && (
-          <div className="text-center py-12 text-slate-500">
-            <User className="w-10 h-10 mx-auto mb-3 text-slate-700" />
-            <p className="text-sm">{note || 'No records found. Try a different name or state.'}</p>
+          <div className="text-center py-12 space-y-4">
+            <User className="w-10 h-10 mx-auto text-slate-700" />
+            <p className="text-sm text-slate-500">No records found in public database.</p>
+            <a
+              href="https://batchskiptracing.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+            >
+              <Search className="w-4 h-4" />
+              Try BatchSkipTracing — $0.12/record
+            </a>
+            <p className="text-xs text-slate-600">The #1 skip tracing tool for real estate investors</p>
           </div>
         )}
 
