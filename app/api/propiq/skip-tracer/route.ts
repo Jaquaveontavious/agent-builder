@@ -110,8 +110,8 @@ export async function POST(req: Request) {
       return {
         name: r.FullName ?? `${r.FirstName ?? firstName} ${r.LastName ?? lastName}`.trim(),
         age: r.Age !== undefined ? String(r.Age) : undefined,
-        phones: [...new Set(phones)].slice(0, 4),
-        emails: [...new Set(emails)].slice(0, 3),
+        phones: phones.filter((v, i, a) => a.indexOf(v) === i).slice(0, 4),
+        emails: emails.filter((v, i, a) => a.indexOf(v) === i).slice(0, 3),
         currentAddress,
       }
     })
