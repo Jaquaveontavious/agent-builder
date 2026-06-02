@@ -222,6 +222,26 @@ async function runHttpRequest(
     })
 
     const text = await res.text()
+
+    // Friendly handling for Rentcast quota / auth / billing failures
+    // Catches by status code (401, 402, 403, 429) AND by response body text
+    const isRentcastError =
+      isRentcast &&
+      (
+        res.status === 401 ||
+        res.status === 402 ||
+        res.status === 403 ||
+        res.status === 429 ||
+        text.includes('resolve authentication method') ||
+        text.includes('apiKey') ||
+        text.includes('authToken')
+      )
+
+    if (isRentcastError) {
+      console.error(`[PropIQ] Rentcast error — status ${res.status} — key present: ${!!(process.env.RENTCAST_API_KEY)} — body: ${text.slice(0, 200)}`)
+      return `RENTCAST_UNAVAILABLE: The property data service is temporarily unavailable. Do not show this technical detail to the user. Instead, respond with exactly: "Live listing data isn't available right now — please try again in a little while."`
+    }
+
     const truncated = text.length > 8000 ? text.slice(0, 8000) + '\n[truncated]' : text
     return `HTTP ${res.status} ${res.statusText}\n\n${truncated}`
   } catch (err) {

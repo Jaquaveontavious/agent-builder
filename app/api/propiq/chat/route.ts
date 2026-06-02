@@ -42,7 +42,8 @@ YEAR BUILT: [yearBuilt]
 DAYS ON MARKET: [daysOnMarket]
 
 Flag any property with daysOnMarket > 60 as a motivated seller opportunity.
-If no results, try a nearby city or expand the price range slightly and try again.`
+If no results, try a nearby city or expand the price range slightly and try again.
+If the API returns RENTCAST_UNAVAILABLE, return that exact string and nothing else.`
 
 const COMP_PULLER_PROMPT = `You are the Comp Puller agent for PropIQ, a real estate investment tool.
 For each property you receive, make TWO API calls: one for valuation, one for owner data.
@@ -89,7 +90,8 @@ Return results in this EXACT format — no deviations, no extra text:
 - Mail To: [owner.mailingAddress.formattedAddress]
 ---
 
-If AVM returns no data, skip that property. If owner data is unavailable, omit those fields.`
+If AVM returns no data, skip that property. If owner data is unavailable, omit those fields.
+If any API call returns RENTCAST_UNAVAILABLE, return that exact string and nothing else.`
 
 const PROPIQ_COORDINATOR_PROMPT = (dealFinderId: string, compPullerId: string) => `You are PropIQ, a real estate investment analysis tool. You are direct, data-driven, and never add filler.
 
@@ -102,6 +104,7 @@ Rules:
 2. For deal searches: invoke Deal Finder first, then pass ALL returned addresses to Comp Puller as context
 3. For comp/ARV requests on specific addresses: invoke Comp Puller only
 4. Your final response must be ONLY the property cards and a one-sentence summary — no advice, no next steps, no emojis, no padding
+5. If any agent returns a message containing RENTCAST_UNAVAILABLE, respond with exactly: "Live listing data isn't available right now — please try again in a little while." Nothing else.
 
 Output format — copy the Comp Puller's output EXACTLY as-is, including all fields. Do not reformat, summarize, or remove any fields. Then append:
 
@@ -201,22 +204,53 @@ async function ensurePropIQSetup(userId: string): Promise<{
 // ─── POST /api/propiq/chat ────────────────────────────────────────────────────
 
 export async function POST(req: Request) {
+  console.log('[PropIQ] POST start — SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL?.slice(0, 30), '— SERVICE_KEY length:', process.env.SUPABASE_SERVICE_ROLE_KEY?.length ?? 'MISSING', '— RENTCAST_KEY length:', process.env.RENTCAST_API_KEY?.length ?? 'MISSING', '— ANTHROPIC_KEY length:', process.env.ANTHROPIC_API_KEY?.length ?? 'MISSING')
+
   const supabase = await createAuthClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return new Response('Unauthorized', { status: 401 })
 
+  console.log('[PropIQ] user authenticated:', user.id.slice(0, 8))
   const service = createServiceClient()
 
-  // Subscription gate
-  const { data: sub } = await service
-    .from('user_subscriptions')
-    .select('plan')
-    .eq('user_id', user.id)
-    .single()
+  // Subscription / trial gate
+  let isPro = false
+  let trialUsed = 0
+  try {
+    const { data: sub, error: subError } = await service
+      .from('user_subscriptions')
+      .select('plan, trial_searches_used')
+      .eq('user_id', user.id)
+      .single()
 
+    if (subError) {
+      console.error('[PropIQ] Subscription fetch error:', subError)
+    }
 
-  if (sub?.plan !== 'pro') {
-    return ssError('PropIQ requires a Pro subscription ($99/mo). Upgrade to access deal finding and analysis.')
+    isPro = sub?.plan === 'pro'
+    trialUsed = sub?.trial_searches_used ?? 0
+  } catch (err) {
+    console.error('[PropIQ] Subscription check threw:', err)
+    // Fail open — let them proceed rather than blocking on a DB error
+  }
+
+  const TRIAL_LIMIT = 3
+
+  if (!isPro && trialUsed >= TRIAL_LIMIT) {
+    return ssUpgradeRequired()
+  }
+
+  // Increment trial counter before running (prevents gaming by cancelling mid-stream)
+  if (!isPro) {
+    try {
+      await service
+        .from('user_subscriptions')
+        .update({ trial_searches_used: trialUsed + 1, updated_at: new Date().toISOString() })
+        .eq('user_id', user.id)
+    } catch (err) {
+      console.error('[PropIQ] Trial counter update threw:', err)
+      // Non-fatal — continue with the search
+    }
   }
 
   const body = await req.json() as { message: string; conversation_id?: string }
@@ -275,6 +309,7 @@ export async function POST(req: Request) {
 
   const readable = new ReadableStream({
     async start(controller) {
+      console.log('[PropIQ] stream started — agents:', agents.length, '— conversationId:', conversationId?.slice(0, 8))
       const enc = new TextEncoder()
       const agentLogs: AgentLog[] = []
       const agentStartTimes: Record<string, string> = {}
@@ -408,6 +443,12 @@ export async function POST(req: Request) {
 function ssError(message: string) {
   const ev: GridSSEEvent = { type: 'error', message }
   return new Response(`data: ${JSON.stringify(ev)}\n\n`, {
+    headers: { 'Content-Type': 'text/event-stream' },
+  })
+}
+
+function ssUpgradeRequired() {
+  return new Response(`data: ${JSON.stringify({ type: 'upgrade_required' })}\n\n`, {
     headers: { 'Content-Type': 'text/event-stream' },
   })
 }

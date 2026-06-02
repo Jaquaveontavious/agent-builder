@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import Link from 'next/link'
 import {
   Send,
   Loader2,
@@ -14,8 +15,11 @@ import {
   ChevronUp,
   Sparkles,
   FileText,
+  Search,
+  Phone,
 } from 'lucide-react'
 import DealDossier from '@/components/DealDossier'
+import UpgradeButton from '@/components/UpgradeButton'
 import type { PropertyInput } from '@/app/api/propiq/dossier/route'
 
 interface Message {
@@ -68,7 +72,32 @@ function parsePropertyInput(address: string, fields: Record<string, string>): Pr
   }
 }
 
+interface SkipResult { phones: string[]; emails: string[]; name: string }
+
 function PropertyCard({ content, onAnalyze }: { content: string; onAnalyze: (p: PropertyInput) => void }) {
+  const [skipResults, setSkipResults] = useState<Record<number, SkipResult[] | 'loading' | 'none'>>({})
+
+  async function handleSkipTrace(i: number, ownerName: string, mailTo: string) {
+    setSkipResults((prev) => ({ ...prev, [i]: 'loading' }))
+    try {
+      // Parse city/state from mail to address
+      const parts = mailTo.split(',')
+      const state = parts[parts.length - 1]?.trim().split(' ').find((p) => p.length === 2 && p === p.toUpperCase())
+      const city = parts[parts.length - 2]?.trim()
+      const res = await fetch('/api/propiq/skip-tracer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: ownerName, city, state }),
+      })
+      const data = await res.json() as { results?: SkipResult[] }
+      setSkipResults((prev) => ({
+        ...prev,
+        [i]: data.results && data.results.length > 0 ? data.results : 'none',
+      }))
+    } catch {
+      setSkipResults((prev) => ({ ...prev, [i]: 'none' }))
+    }
+  }
   const blocks = content.split(/^---$/m).map((b) => b.trim()).filter(Boolean)
 
   const propertyBlocks = blocks.filter((b) => b.startsWith('**') || b.includes('Price:'))
@@ -164,14 +193,60 @@ function PropertyCard({ content, onAnalyze }: { content: string; onAnalyze: (p: 
               </div>
             )}
 
-            {/* Full Analysis button */}
-            <button
-              onClick={() => onAnalyze(parsePropertyInput(address, fields))}
-              className="mt-4 w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold py-2 rounded-lg transition-colors"
-            >
-              <FileText className="w-3.5 h-3.5" />
-              Full Analysis — Underwrite · Offer Letter · Lead Nurture
-            </button>
+            {/* Skip trace results */}
+            {skipResults[i] === 'loading' && (
+              <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                Searching public records…
+              </div>
+            )}
+            {skipResults[i] === 'none' && (
+              <div className="mt-3 text-xs text-slate-600">No contact records found for this owner.</div>
+            )}
+            {Array.isArray(skipResults[i]) && (
+              <div className="mt-3 pt-3 border-t border-slate-800 space-y-2">
+                <div className="text-[10px] uppercase tracking-widest text-violet-500 mb-2">Skip Trace Results</div>
+                {(skipResults[i] as SkipResult[]).slice(0, 1).map((r, ri) => (
+                  <div key={ri} className="space-y-1.5">
+                    {r.phones.slice(0, 3).map((phone, pi) => (
+                      <a key={pi} href={`tel:${phone}`} className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 rounded-lg px-3 py-2 transition-colors group">
+                        <Phone className="w-3 h-3 text-emerald-400 flex-shrink-0" />
+                        <span className="text-xs text-slate-200 group-hover:text-white font-medium">{phone}</span>
+                      </a>
+                    ))}
+                    {r.emails.slice(0, 2).map((email, ei) => (
+                      <div key={ei} className="text-xs text-slate-500 pl-1">{email}</div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Action buttons */}
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <button
+                onClick={() => onAnalyze(parsePropertyInput(address, fields))}
+                className="flex items-center justify-center gap-1.5 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold py-2 rounded-lg transition-colors"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                Full Analysis
+              </button>
+              {fields['Owner'] && (
+                <button
+                  onClick={() => {
+                    // Strip co-owner (everything after "&" or "and") and ownership type (after "|")
+                    const rawOwner = fields['Owner'].split('|')[0].trim()
+                    const primaryOwner = rawOwner.split(/\s*&\s*/)[0].trim()
+                    void handleSkipTrace(i, primaryOwner, fields['Mail To'] ?? '')
+                  }}
+                  disabled={skipResults[i] === 'loading'}
+                  className="flex items-center justify-center gap-1.5 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-xs font-bold py-2 rounded-lg transition-colors"
+                >
+                  <Search className="w-3.5 h-3.5" />
+                  Skip Trace
+                </button>
+              )}
+            </div>
           </div>
         )
       })}
@@ -229,6 +304,8 @@ function AgentActivityLog({ activities }: { activities: AgentActivity[] }) {
   )
 }
 
+const TRIAL_LIMIT = 3
+
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -238,6 +315,8 @@ export default function ChatPage() {
   const [agentActivity, setAgentActivity] = useState<AgentActivity[]>([])
   const [error, setError] = useState('')
   const [dossierProperty, setDossierProperty] = useState<PropertyInput | null>(null)
+  const [trialUsed, setTrialUsed] = useState<number | null>(null)
+  const [isPro, setIsPro] = useState(false)
 
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -245,6 +324,16 @@ export default function ChatPage() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, streamingContent])
+
+  useEffect(() => {
+    fetch('/api/subscription')
+      .then((r) => r.json())
+      .then((d: { subscription?: { plan?: string; trial_searches_used?: number } }) => {
+        setIsPro(d.subscription?.plan === 'pro')
+        setTrialUsed(d.subscription?.trial_searches_used ?? 0)
+      })
+      .catch(() => {})
+  }, [])
 
   async function sendMessage(text?: string) {
     const msg = (text ?? input).trim()
@@ -310,7 +399,16 @@ export default function ChatPage() {
               message?: string
             }
 
-            if (event.type === 'coordinator_text') {
+            if (event.type === 'upgrade_required') {
+              setMessages((prev) => [
+                ...prev,
+                { id: crypto.randomUUID(), role: 'assistant', content: '__upgrade_required__' },
+              ])
+              setStreamingContent('')
+              setAgentActivity([])
+              setLoading(false)
+              return
+            } else if (event.type === 'coordinator_text') {
               fullContent += event.content ?? ''
               setStreamingContent(fullContent)
             } else if (event.type === 'agent_start') {
@@ -351,6 +449,7 @@ export default function ChatPage() {
               ])
               setStreamingContent('')
               setAgentActivity([])
+              if (!isPro) setTrialUsed((n) => (n ?? 0) + 1)
             } else if (event.type === 'error') {
               setError(event.message ?? 'Unknown error')
             }
@@ -378,34 +477,49 @@ export default function ChatPage() {
   return (
     <div className="min-h-screen bg-[#060608] text-slate-100 flex flex-col">
       {/* Header */}
-      <header className="border-b border-slate-800/60 px-6 py-4 flex-shrink-0 bg-[#060608]/95 backdrop-blur sticky top-0 z-10">
-        <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center">
+      <header className="border-b border-slate-800/60 px-4 sm:px-6 py-3 sm:py-4 flex-shrink-0 bg-[#060608]/95 backdrop-blur sticky top-0 z-10">
+        <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0">
               <Building2 className="w-4 h-4 text-black" />
             </div>
-            <div>
-              <span className="font-bold text-lg tracking-tight">PropIQ</span>
-              <span className="text-slate-500 text-xs block leading-none">AI Real Estate Back Office</span>
+            <div className="min-w-0">
+              <span className="font-bold text-base sm:text-lg tracking-tight">PropIQ</span>
+              <span className="text-slate-500 text-xs block leading-none hidden sm:block">AI Real Estate Back Office</span>
             </div>
           </div>
-          {conversationId && (
-            <button
-              onClick={() => {
-                setMessages([])
-                setConversationId(null)
-                setStreamingContent('')
-              }}
-              className="text-xs text-slate-600 hover:text-slate-400 transition-colors"
-            >
-              New chat
-            </button>
-          )}
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            <Link href="/skip-tracer" className="hidden sm:flex items-center gap-1.5 text-xs text-violet-400 hover:text-violet-300 transition-colors">
+              <Search className="w-3.5 h-3.5" />
+              Skip Tracer
+            </Link>
+            {!isPro && trialUsed !== null && (
+              trialUsed >= TRIAL_LIMIT ? (
+                <UpgradeButton label="Upgrade — $99/mo" />
+              ) : (
+                <span className="text-xs text-slate-500 whitespace-nowrap">
+                  {TRIAL_LIMIT - trialUsed} search{TRIAL_LIMIT - trialUsed !== 1 ? 'es' : ''} left
+                </span>
+              )
+            )}
+            {conversationId && (
+              <button
+                onClick={() => {
+                  setMessages([])
+                  setConversationId(null)
+                  setStreamingContent('')
+                }}
+                className="text-xs text-slate-600 hover:text-slate-400 transition-colors whitespace-nowrap"
+              >
+                New chat
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
       {/* Messages */}
-      <div className="flex-1 max-w-3xl mx-auto w-full px-6 py-6 space-y-6">
+      <div className="flex-1 max-w-3xl mx-auto w-full px-4 sm:px-6 py-6 space-y-6">
         {isEmpty && (
           <div className="pt-12 text-center space-y-8">
             <div>
@@ -436,6 +550,17 @@ export default function ChatPage() {
             {msg.role === 'user' ? (
               <div className="bg-slate-800 rounded-2xl rounded-tr-sm px-4 py-3 max-w-[80%] text-sm text-slate-100">
                 {msg.content}
+              </div>
+            ) : msg.content === '__upgrade_required__' ? (
+              <div className="max-w-[95%] bg-amber-950/40 border border-amber-700/50 rounded-2xl px-6 py-5 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-amber-400" />
+                  <span className="font-semibold text-amber-300">You've used your 3 free searches</span>
+                </div>
+                <p className="text-sm text-slate-400">
+                  Unlock unlimited deal finding, comp pulling, and analysis for $99/mo.
+                </p>
+                <UpgradeButton label="Upgrade to PropIQ Pro — $99/mo" className="flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-black px-5 py-2.5 rounded-xl text-sm font-bold transition-colors" />
               </div>
             ) : (
               <div className="max-w-[95%] space-y-1">
@@ -492,7 +617,7 @@ export default function ChatPage() {
       </div>
 
       {/* Input */}
-      <div className="sticky bottom-0 bg-[#060608]/95 backdrop-blur border-t border-slate-800/60 px-6 py-4">
+      <div className="sticky bottom-0 bg-[#060608]/95 backdrop-blur border-t border-slate-800/60 px-4 sm:px-6 py-3 sm:py-4">
         <div className="max-w-3xl mx-auto">
           <div className="bg-slate-900 border border-slate-700 rounded-2xl p-3 focus-within:border-slate-500 transition-colors">
             <textarea
