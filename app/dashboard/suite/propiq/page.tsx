@@ -473,7 +473,7 @@ export default function PropIQSuitePage() {
             </Link>
             {!isPro && trialUsed !== null && (
               trialUsed >= TRIAL_LIMIT ? (
-                <UpgradeButton label="Upgrade — $99/mo" />
+                <UpgradeButton label="Upgrade — $97/mo" />
               ) : (
                 <span className="text-xs text-slate-500 whitespace-nowrap">
                   {TRIAL_LIMIT - trialUsed} search{TRIAL_LIMIT - trialUsed !== 1 ? 'es' : ''} left
@@ -528,8 +528,8 @@ export default function PropIQSuitePage() {
                   <Building2 className="w-5 h-5 text-blue-400" />
                   <span className="font-semibold text-blue-300">You've used your 3 free searches</span>
                 </div>
-                <p className="text-sm text-slate-400">Unlock unlimited deal finding, comp pulling, and analysis for $99/mo.</p>
-                <UpgradeButton label="Upgrade to PropIQ Pro — $99/mo" className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-colors" />
+                <p className="text-sm text-slate-400">Unlock unlimited deal finding, comp pulling, and analysis for $97/mo.</p>
+                <UpgradeButton label="Upgrade to PropIQ Pro — $97/mo" className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-colors" />
               </div>
             ) : (
               <div className="max-w-[95%] space-y-1">

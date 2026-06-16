@@ -38,7 +38,7 @@ export async function runPropIQAgent({
       .eq('user_id', user.id)
       .single()
     if (sub?.plan !== 'pro') {
-      const ev: SimpleSSEEvent = { type: 'error', message: 'PropIQ requires a Pro subscription ($99/mo).' }
+      const ev: SimpleSSEEvent = { type: 'error', message: 'PropIQ requires a Pro subscription ($97/mo).' }
       return new Response(`data: ${JSON.stringify(ev)}\n\n`, {
         headers: { 'Content-Type': 'text/event-stream' },
       })

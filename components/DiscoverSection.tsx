@@ -145,7 +145,7 @@ export default function DiscoverSection({ onDeployed, isPro }: { onDeployed: (id
               Upgrade to deploy from the template library and generate custom operative ideas.
             </p>
             <UpgradeButton
-              label="Upgrade to Pro — $99/mo"
+              label="Upgrade to Pro — $97/mo"
               className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors"
             />
           </div>
