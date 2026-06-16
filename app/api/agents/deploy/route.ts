@@ -80,12 +80,10 @@ async function runDeploy(
       .from('operatives')
       .insert({
         user_id: user.id,
-        suite_id: input.suite_id,
-        agent_id: input.suite_id === 'custom' ? `custom_${Date.now()}` : input.suite_id,
+        suite_id: 'custom',
+        agent_id: `custom_${Date.now()}`,
         name: input.name,
-        config: input.suite_id === 'custom'
-          ? { system_prompt: input.system_prompt, description: input.description }
-          : {},
+        config: { system_prompt: input.system_prompt, description: input.description },
         status: 'active',
       })
       .select('id, suite_id, name, config')

@@ -37,9 +37,9 @@ export default function DeployDrawer({ open, onClose, onDeployed }: DeployDrawer
 
   useEffect(() => {
     if (open) {
+      resetDrawer()
       setTimeout(() => inputRef.current?.focus(), 100)
     }
-    // Do NOT reset on close — conversation persists so user can re-open and continue
   }, [open])
 
   function resetDrawer() {
