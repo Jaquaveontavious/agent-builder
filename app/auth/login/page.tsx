@@ -1,9 +1,9 @@
 'use client'
 
-import { Suspense, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Building2, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react'
+import { Cpu, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react'
 import { createBrowserClientHelper } from '@/lib/supabase/client'
 
 type Mode = 'login' | 'signup' | 'magic'
@@ -11,7 +11,7 @@ type Mode = 'login' | 'signup' | 'magic'
 function LoginForm() {
   const router = useRouter()
   const params = useSearchParams()
-  const next = params.get('next') ?? '/hub'
+  const next = params.get('next') ?? '/dashboard'
   const desc = params.get('desc') ?? ''
 
   const [mode, setMode] = useState<Mode>('login')
@@ -22,6 +22,9 @@ function LoginForm() {
   const [magicSent, setMagicSent] = useState(false)
 
   const supabase = createBrowserClientHelper()
+
+  // Sign out any existing session so the login form always starts fresh
+  useEffect(() => { void supabase.auth.signOut() }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -84,10 +87,10 @@ function LoginForm() {
   return (
     <div className="w-full max-w-sm">
       <Link href="/" className="flex items-center gap-2 justify-center mb-8">
-        <div className="w-9 h-9 bg-amber-500 rounded-lg flex items-center justify-center">
-          <Building2 className="w-5 h-5 text-black" />
+        <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center">
+          <Cpu className="w-5 h-5 text-white" />
         </div>
-        <span className="text-2xl font-bold">PropIQ</span>
+        <span className="text-2xl font-bold">Iron Operative</span>
       </Link>
 
       <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-8">
@@ -106,7 +109,7 @@ function LoginForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-9 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 transition-colors"
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-9 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-600 transition-colors"
               />
             </div>
           </div>
@@ -122,7 +125,7 @@ function LoginForm() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-9 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 transition-colors"
+                  className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-9 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-600 transition-colors"
                 />
               </div>
             </div>
@@ -137,7 +140,7 @@ function LoginForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-black py-2.5 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-black py-2.5 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2"
           >
             {loading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -171,14 +174,14 @@ function LoginForm() {
             {mode === 'signup' ? (
               <>
                 Already have an account?{' '}
-                <button onClick={() => setMode('login')} className="text-amber-400 hover:text-amber-300">
+                <button onClick={() => setMode('login')} className="text-blue-400 hover:text-blue-300">
                   Sign in
                 </button>
               </>
             ) : (
               <>
                 No account?{' '}
-                <button onClick={() => setMode('signup')} className="text-amber-400 hover:text-amber-300">
+                <button onClick={() => setMode('signup')} className="text-blue-400 hover:text-blue-300">
                   Sign up free
                 </button>
               </>

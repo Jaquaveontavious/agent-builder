@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "propiq",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": ["-Command", "$key = (Get-Content 'D:\\ContractorSetup\\agent-builder\\.env.local' | Where-Object { $_ -match '^ANTHROPIC_API_KEY=' }) -replace '^ANTHROPIC_API_KEY=',''; $env:ANTHROPIC_API_KEY = $key; npm --prefix 'D:\\ContractorSetup\\agent-builder' run dev -- --hostname 0.0.0.0"],
+      "port": 3000
+    }
+  ]
+}

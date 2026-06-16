@@ -1,12 +1,36 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createAuthClient, createServiceClient } from '@/lib/supabase/server'
-import { Plus, Shield, LogOut, LayoutGrid, Star, Crosshair, Network, LayoutDashboard, Building2 } from 'lucide-react'
-import type { Agent, Grid, UserSubscription, Workspace } from '@/lib/types'
-import { FREE_AGENT_LIMIT, FREE_RUN_LIMIT, stripe } from '@/lib/stripe'
-import { CATEGORIES, getPopularTemplates } from '@/lib/templates'
+import {
+  Cpu, Building2, ImageIcon, BarChart3, MessageSquare, Shield,
+} from 'lucide-react'
 import UpgradeButton from '@/components/UpgradeButton'
-import AgentCard from '@/components/AgentCard'
+import LogoutButton from '@/components/LogoutButton'
+import { stripe } from '@/lib/stripe'
+import type { UserSubscription } from '@/lib/types'
+import DashboardClient from './DashboardClient'
+
+const SUITE_CATALOG = [
+  {
+    id: 'propiq',
+    name: 'PropIQ',
+    description: 'Deal finding, comp pulling, underwriting, and lead nurture for real estate wholesalers.',
+    icon: 'building2' as const,
+    href: '/dashboard/suite/propiq',
+  },
+  {
+    id: 'content',
+    name: 'Content Suite',
+    description: 'Upload photos and get AI-generated captions for Instagram, Facebook, TikTok, and Google Business.',
+    icon: 'image' as const,
+    href: '/dashboard/suite/content',
+  },
+]
+
+const COMING_SOON = [
+  { name: 'Analytics Suite', icon: 'chart' as const, description: 'Automated reporting and business intelligence.' },
+  { name: 'Communications Suite', icon: 'message' as const, description: 'Outreach, follow-ups, and email sequences.' },
+]
 
 export default async function DashboardPage({
   searchParams,
@@ -21,20 +45,14 @@ export default async function DashboardPage({
 
   const service = createServiceClient()
 
-  const [{ data: agents }, { data: sub }, { data: grids }, { data: workspaces }] = await Promise.all([
-    service.from('agents').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
-    service.from('user_subscriptions').select('*').eq('user_id', user.id).single(),
-    service.from('grids').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(4),
-    service.from('workspaces').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(3),
-  ])
+  const { data: sub } = await service
+    .from('user_subscriptions')
+    .select('*')
+    .eq('user_id', user.id)
+    .single()
 
-  const typedAgents = (agents ?? []) as Agent[]
-  const typedGrids = (grids ?? []) as Grid[]
-  const typedWorkspaces = (workspaces ?? []) as Workspace[]
   let subscription = sub as UserSubscription | null
 
-  // When the user lands here after a successful checkout, the webhook may not
-  // have fired yet. Verify directly with Stripe and sync the DB if needed.
   if (upgraded && subscription?.plan !== 'pro') {
     const customerId = subscription?.stripe_customer_id
     if (customerId) {
@@ -47,11 +65,7 @@ export default async function DashboardPage({
         const activeSub = stripeSubs.data[0]
         await service
           .from('user_subscriptions')
-          .update({
-            plan: 'pro',
-            stripe_subscription_id: activeSub.id,
-            updated_at: new Date().toISOString(),
-          })
+          .update({ plan: 'pro', stripe_subscription_id: activeSub.id, updated_at: new Date().toISOString() })
           .eq('user_id', user.id)
         if (subscription) {
           subscription = { ...subscription, plan: 'pro', stripe_subscription_id: activeSub.id }
@@ -61,282 +75,55 @@ export default async function DashboardPage({
   }
 
   const isPro = subscription?.plan === 'pro'
-  const agentCount = typedAgents.length
-  const atAgentLimit = !isPro && agentCount >= FREE_AGENT_LIMIT
-  const runsUsed = subscription?.runs_this_month ?? 0
+
+  // Load custom operatives
+  let customOperatives: { id: string; name: string; suite_id: string; config: { description?: string } }[] = []
+  try {
+    const { data: ops } = await service
+      .from('operatives')
+      .select('id, name, suite_id, config')
+      .eq('user_id', user.id)
+      .eq('suite_id', 'custom')
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+    customOperatives = (ops ?? []) as typeof customOperatives
+  } catch {
+    // table may not exist yet
+  }
 
   return (
-    <div className="min-h-screen bg-[#060608] text-slate-100 metal-grid">
+    <div className="min-h-screen bg-[#0a0a0f] text-slate-100">
       {/* Header */}
-      <header className="border-b border-slate-800/60 px-6 py-4 bg-[#060608]/95 backdrop-blur sticky top-0 z-10">
+      <header className="border-b border-slate-800/60 px-6 py-4 bg-[#0a0a0f]/95 backdrop-blur sticky top-0 z-10">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <Crosshair className="w-6 h-6 text-red-500" />
+          <Link href="/" className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <Cpu className="w-4 h-4 text-white" />
+            </div>
             <span className="font-bold text-lg">Iron Operative</span>
           </Link>
 
           <div className="flex items-center gap-4">
-            <Link href="/workspace" className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-red-400 transition-colors">
-              <LayoutDashboard className="w-4 h-4" /> Workspaces
-            </Link>
-            <Link href="/chat" className="flex items-center gap-1.5 text-sm text-amber-400 hover:text-amber-300 transition-colors font-medium">
-              <Building2 className="w-4 h-4" /> PropIQ
-            </Link>
-            {isPro && (
-              <Link href="/grid" className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-red-400 transition-colors">
-                <Network className="w-4 h-4" /> The Grid
-              </Link>
-            )}
             {isPro ? (
-              <span className="flex items-center gap-1.5 bg-red-950 border border-red-700 text-red-300 text-xs px-3 py-1 rounded-full">
+              <span className="flex items-center gap-1.5 bg-blue-950 border border-blue-700 text-blue-300 text-xs px-3 py-1 rounded-full">
                 <Shield className="w-3 h-3" /> Pro
               </span>
             ) : (
               <UpgradeButton />
             )}
-            <span className="text-slate-400 text-sm hidden sm:block">{user.email}</span>
-            <form action="/api/auth/signout" method="POST">
-              <button type="submit" className="text-slate-500 hover:text-slate-300 transition-colors">
-                <LogOut className="w-4 h-4" />
-              </button>
-            </form>
+            <span className="text-slate-500 text-sm hidden sm:block">{user.email}</span>
+            <LogoutButton />
           </div>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-10">
-        {/* Upgrade success banner */}
-        {upgraded && (
-          <div className="bg-red-950/60 border border-red-700 rounded-xl px-6 py-4 mb-8 flex items-center gap-3">
-            <Shield className="w-5 h-5 text-red-400" />
-            <p className="text-red-200 font-medium">
-              You're now on Pro. Unlimited agents and runs are unlocked.
-            </p>
-          </div>
-        )}
-
-        {/* Usage bar (free only) */}
-        {!isPro && (
-          <div className="bg-slate-900/60 border border-slate-800 rounded-xl px-6 py-4 mb-8 flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
-            <div className="flex gap-8">
-              <div>
-                <div className="text-xs text-slate-500 mb-1">Agents</div>
-                <div className="text-sm font-semibold">{agentCount} / {FREE_AGENT_LIMIT}</div>
-                <div className="w-24 h-1 bg-slate-700 rounded-full mt-1.5">
-                  <div
-                    className="h-1 bg-red-500 rounded-full transition-all"
-                    style={{ width: `${Math.min((agentCount / FREE_AGENT_LIMIT) * 100, 100)}%` }}
-                  />
-                </div>
-              </div>
-              <div>
-                <div className="text-xs text-slate-500 mb-1">Runs this month</div>
-                <div className="text-sm font-semibold">{runsUsed} / {FREE_RUN_LIMIT}</div>
-                <div className="w-24 h-1 bg-slate-700 rounded-full mt-1.5">
-                  <div
-                    className="h-1 bg-red-500 rounded-full transition-all"
-                    style={{ width: `${Math.min((runsUsed / FREE_RUN_LIMIT) * 100, 100)}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-            <UpgradeButton label="Upgrade to Pro — unlimited everything" className="text-xs text-red-400 hover:text-red-300 transition-colors flex items-center gap-1" />
-          </div>
-        )}
-
-        {/* Operatives header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold">Your Agents</h1>
-            <Link href="/agents/templates" className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-red-400 transition-colors">
-              <LayoutGrid className="w-3.5 h-3.5" /> Templates
-            </Link>
-          </div>
-          {atAgentLimit ? (
-            <UpgradeButton label="Upgrade to Pro for more agents" className="flex items-center gap-2 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" />
-          ) : (
-            <Link
-              href="/agents/new"
-              className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-            >
-              <Plus className="w-4 h-4" /> New agent
-            </Link>
-          )}
-        </div>
-
-        {/* Empty state */}
-        {typedAgents.length === 0 && (
-          <div className="text-center py-24 border border-dashed border-slate-800 rounded-2xl">
-            <Crosshair className="w-12 h-12 text-slate-700 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-slate-400 mb-2">No agents yet</h3>
-            <p className="text-slate-600 mb-6 text-sm">
-              Your fleet is empty. Describe what you need and we'll build your first agent.
-            </p>
-            <Link
-              href="/agents/new"
-              className="bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" /> Build your first agent
-            </Link>
-          </div>
-        )}
-
-        {/* Arsenal strip — shown when user has no operatives */}
-        {typedAgents.length === 0 && (
-          <div className="mb-10 mt-10">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                <h2 className="font-bold">Start from a template</h2>
-              </div>
-              <Link href="/agents/templates" className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 transition-colors">
-                <LayoutGrid className="w-3.5 h-3.5" /> All templates {'>'}
-              </Link>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              {getPopularTemplates().map((template) => {
-                const cat = CATEGORIES.find((c) => c.id === template.category)
-                return (
-                  <Link
-                    key={template.id}
-                    href={`/agents/new?template=${template.id}`}
-                    className={`flex items-center gap-3 bg-slate-900/60 border ${cat?.border ?? 'border-slate-800'} ${cat?.glow ?? ''} rounded-xl p-3.5 transition-all hover:bg-slate-900/90 hover:-translate-y-0.5`}
-                  >
-                    <span className="text-xl flex-shrink-0">{template.emoji}</span>
-                    <div className="min-w-0">
-                      <div className="text-xs font-semibold text-white leading-snug truncate">{template.name}</div>
-                      <div className={`text-[10px] mt-0.5 truncate ${cat?.accent ?? 'text-slate-400'}`}>{cat?.name}</div>
-                    </div>
-                  </Link>
-                )
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Operative grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {typedAgents.map((agent) => (
-            <AgentCard key={agent.id} agent={agent} />
-          ))}
-        </div>
-
-        {/* Workspaces section */}
-        <div className="mt-12">
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2">
-              <LayoutDashboard className="w-5 h-5 text-red-400" />
-              <h2 className="text-xl font-bold">Workspaces</h2>
-              <span className="text-xs text-slate-600 bg-slate-800 px-2 py-0.5 rounded-full">AI-powered dashboards</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Link href="/workspace" className="text-xs text-slate-500 hover:text-red-400 transition-colors">View all →</Link>
-              <Link href="/workspace/new" className="flex items-center gap-1.5 bg-red-600 hover:bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors">
-                <Plus className="w-3.5 h-3.5" /> New Workspace
-              </Link>
-            </div>
-          </div>
-
-          {typedWorkspaces.length === 0 && (
-            <div className="border border-dashed border-slate-800 rounded-xl py-8 text-center">
-              <p className="text-slate-500 text-sm mb-3">Build a custom dashboard from your agents.</p>
-              <Link href="/workspace/new" className="text-red-400 hover:text-red-300 text-sm transition-colors">
-                Create your first workspace →
-              </Link>
-            </div>
-          )}
-
-          {typedWorkspaces.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {typedWorkspaces.map((ws) => (
-                <Link key={ws.id} href={`/workspace/${ws.id}`}
-                  className="group flex items-center gap-3 bg-slate-900/60 border border-slate-800 hover:border-red-800/60 rounded-xl p-4 transition-all">
-                  <LayoutDashboard className="w-4 h-4 text-red-400 flex-shrink-0" />
-                  <div className="min-w-0">
-                    <div className="text-sm font-semibold group-hover:text-red-300 transition-colors truncate">{ws.name}</div>
-                    {ws.description && <div className="text-xs text-slate-500 truncate">{ws.description}</div>}
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* The Grid section */}
-        <div className="mt-12">
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2">
-              <Network className="w-5 h-5 text-red-400" />
-              <h2 className="text-xl font-bold">The Grid</h2>
-              {isPro && (
-                <span className="text-xs text-slate-600 bg-slate-800 px-2 py-0.5 rounded-full">
-                  Multi-agent orchestration
-                </span>
-              )}
-            </div>
-            {isPro && (
-              <div className="flex items-center gap-3">
-                <Link href="/grid" className="text-xs text-slate-500 hover:text-red-400 transition-colors">
-                  View all →
-                </Link>
-                <Link
-                  href="/grid/new"
-                  className="flex items-center gap-1.5 bg-red-600 hover:bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
-                >
-                  <Plus className="w-3.5 h-3.5" /> New Grid
-                </Link>
-              </div>
-            )}
-          </div>
-
-          {!isPro && (
-            <div className="bg-slate-900/40 border border-slate-800/60 rounded-xl px-6 py-8 flex items-center gap-6">
-              <Network className="w-10 h-10 text-slate-700 flex-shrink-0" />
-              <div>
-                <p className="font-semibold text-slate-300 mb-1">Orchestrate multiple agents on a single task</p>
-                <p className="text-sm text-slate-500">
-                  The Grid lets agents recruit sub-agents, work in parallel, and pass results between each other — unlocked with Pro.
-                </p>
-              </div>
-              <UpgradeButton label="Unlock The Grid" className="flex-shrink-0 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" />
-            </div>
-          )}
-
-          {isPro && typedGrids.length === 0 && (
-            <div className="border border-dashed border-slate-800 rounded-xl py-10 text-center">
-              <p className="text-slate-500 text-sm mb-3">No grids yet.</p>
-              <Link
-                href="/grid/new"
-                className="text-red-400 hover:text-red-300 text-sm transition-colors"
-              >
-                Build your first Grid →
-              </Link>
-            </div>
-          )}
-
-          {isPro && typedGrids.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {typedGrids.map((grid) => (
-                <Link
-                  key={grid.id}
-                  href={`/grid/${grid.id}`}
-                  className="group flex items-center gap-3 bg-slate-900/60 border border-slate-800 hover:border-red-800/60 rounded-xl p-4 transition-all"
-                >
-                  <Network className="w-4 h-4 text-red-400 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-semibold group-hover:text-red-300 transition-colors truncate">
-                      {grid.name}
-                    </div>
-                    <div className="text-xs text-slate-500">
-                      {grid.member_agents.length} agents
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-      </main>
+      <DashboardClient
+        upgraded={upgraded}
+        isPro={isPro}
+        suiteCatalog={SUITE_CATALOG}
+        comingSoon={COMING_SOON}
+        initialCustomOperatives={customOperatives}
+      />
     </div>
   )
 }

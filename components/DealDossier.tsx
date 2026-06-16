@@ -59,6 +59,7 @@ export default function DealDossier({ property, onClose }: Props) {
     nurture: { content: '', status: 'idle', open: true },
   })
   const [overallDone, setOverallDone] = useState(false)
+  const [globalError, setGlobalError] = useState<string | null>(null)
   const [copied, setCopied] = useState<DossierSection | 'all' | null>(null)
   const drawerRef = useRef<HTMLDivElement>(null)
   const hasRun = useRef(false)
@@ -73,6 +74,7 @@ export default function DealDossier({ property, onClose }: Props) {
       nurture: { content: '', status: 'idle', open: true },
     })
     setOverallDone(false)
+    setGlobalError(null)
     void runDossier(property)
   }, [property])
 
@@ -126,6 +128,8 @@ export default function DealDossier({ property, onClose }: Props) {
               }))
             } else if (ev.type === 'done') {
               setOverallDone(true)
+            } else if (ev.type === 'error') {
+              setGlobalError(ev.message)
             }
           } catch { /* ignore */ }
         }
@@ -239,6 +243,13 @@ export default function DealDossier({ property, onClose }: Props) {
             ))}
           </div>
         </div>
+
+        {/* Global error banner */}
+        {globalError && (
+          <div className="mx-4 mt-4 bg-red-950/40 border border-red-800/50 rounded-xl px-4 py-3 text-sm text-red-400">
+            {globalError}
+          </div>
+        )}
 
         {/* Sections */}
         <div className="flex-1 overflow-y-auto">

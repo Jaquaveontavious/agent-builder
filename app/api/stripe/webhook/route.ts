@@ -2,6 +2,7 @@ import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { createServiceClient } from '@/lib/supabase/server'
+import { sendProWelcomeEmail } from '@/lib/email'
 import type Stripe from 'stripe'
 
 export async function POST(req: Request) {
@@ -42,11 +43,16 @@ export async function POST(req: Request) {
           .update(updatePayload)
           .eq('user_id', userId)
       } else if (session.customer) {
-        // Fallback: look up by Stripe customer ID stored at checkout-session creation
         await service
           .from('user_subscriptions')
           .update(updatePayload)
           .eq('stripe_customer_id', session.customer as string)
+      }
+
+      // Send welcome email
+      const customerEmail = session.customer_details?.email ?? session.customer_email
+      if (customerEmail) {
+        await sendProWelcomeEmail(customerEmail).catch(() => {})
       }
       break
     }

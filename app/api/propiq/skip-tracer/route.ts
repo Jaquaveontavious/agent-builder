@@ -7,6 +7,8 @@ export interface SkipTraceResult {
   emails: string[]
   age?: string
   currentAddress?: string
+  city?: string
+  state?: string
 }
 
 // Response shape from usa-people-search-public-records.p.rapidapi.com
@@ -15,12 +17,12 @@ interface USAPeopleRecord {
   FirstName?: string
   LastName?: string
   Age?: string | number
-  PhoneNumbers?: Array<string | { Number?: string; PhoneNumber?: string }>
-  Emails?: Array<string | { Email?: string; EmailAddress?: string }>
-  Addresses?: Array<string | { FullAddress?: string; Address?: string; City?: string; State?: string; Zip?: string }>
+  PeoplePhone?: Array<{ PhoneNumber?: string; LineType?: string }>
+  Email?: Array<{ EmailAddress?: string } | string>
   Address?: string
-  Phone?: string
-  Email?: string
+  Previous_Addresse?: string
+  City?: string
+  State?: string
 }
 
 export async function POST(req: Request) {
@@ -45,9 +47,8 @@ export async function POST(req: Request) {
   const lastName = nameParts.slice(1).join(' ') ?? ''
 
   try {
+    // Note: this API returns 404 with any location filter — name-only gives best coverage
     const params = new URLSearchParams({ FirstName: firstName, LastName: lastName })
-    if (state) params.set('State', state)
-    if (city) params.set('City', city)
 
     const res = await fetch(
       `https://usa-people-search-public-records.p.rapidapi.com/SearchPeople?${params}`,
@@ -75,37 +76,25 @@ export async function POST(req: Request) {
     }
 
     const results: SkipTraceResult[] = records.slice(0, 3).map((r) => {
-      // Normalize phones — field can be string[], object[], or a single string
+      // Phones — API returns PeoplePhone array
       const phones: string[] = []
-      if (r.Phone) phones.push(r.Phone)
-      if (Array.isArray(r.PhoneNumbers)) {
-        r.PhoneNumbers.forEach((p) => {
-          if (typeof p === 'string') phones.push(p)
-          else if (p.Number) phones.push(p.Number)
-          else if (p.PhoneNumber) phones.push(p.PhoneNumber)
+      if (Array.isArray(r.PeoplePhone)) {
+        r.PeoplePhone.forEach((p) => {
+          if (p.PhoneNumber) phones.push(p.PhoneNumber)
         })
       }
 
-      // Normalize emails
+      // Emails — API returns Email array
       const emails: string[] = []
-      if (r.Email) emails.push(r.Email)
-      if (Array.isArray(r.Emails)) {
-        r.Emails.forEach((e) => {
+      if (Array.isArray(r.Email)) {
+        r.Email.forEach((e) => {
           if (typeof e === 'string') emails.push(e)
-          else if (e.Email) emails.push(e.Email)
           else if (e.EmailAddress) emails.push(e.EmailAddress)
         })
       }
 
-      // Normalize address
-      let currentAddress: string | undefined
-      if (r.Address) {
-        currentAddress = r.Address
-      } else if (Array.isArray(r.Addresses) && r.Addresses.length > 0) {
-        const a = r.Addresses[0]
-        if (typeof a === 'string') currentAddress = a
-        else currentAddress = a.FullAddress ?? a.Address ?? [a.City, a.State, a.Zip].filter(Boolean).join(', ')
-      }
+      // Address
+      const currentAddress = r.Address ?? (r.City && r.State ? `${r.City}, ${r.State}` : undefined)
 
       return {
         name: r.FullName ?? `${r.FirstName ?? firstName} ${r.LastName ?? lastName}`.trim(),
@@ -113,6 +102,8 @@ export async function POST(req: Request) {
         phones: phones.filter((v, i, a) => a.indexOf(v) === i).slice(0, 4),
         emails: emails.filter((v, i, a) => a.indexOf(v) === i).slice(0, 3),
         currentAddress,
+        city: r.City,
+        state: r.State,
       }
     })
 
