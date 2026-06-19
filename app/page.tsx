@@ -208,6 +208,23 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Demo video */}
+      <section className="max-w-4xl mx-auto px-6 pb-24">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl font-bold mb-3">See it in action</h2>
+          <p className="text-slate-400 text-lg">Watch a real operative generate a full wholesale deal strategy in 30 seconds.</p>
+        </div>
+        <div className="relative w-full rounded-2xl overflow-hidden border border-slate-800 shadow-2xl shadow-blue-950/20" style={{ paddingBottom: '56.25%' }}>
+          <iframe
+            src="https://www.youtube.com/embed/sYiJPNZEv1c"
+            title="Iron Operative Demo"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="absolute inset-0 w-full h-full"
+          />
+        </div>
+      </section>
+
       {/* Pricing */}
       <section className="max-w-5xl mx-auto px-6 py-24">
         <div className="text-center mb-14">
